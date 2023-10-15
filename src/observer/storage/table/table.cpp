@@ -57,6 +57,7 @@ RC Table::create(int32_t table_id,
                  int attribute_count, 
                  const AttrInfoSqlNode attributes[])
 {
+  // 参数检查
   if (table_id < 0) {
     LOG_WARN("invalid table id. table_id=%d, table_name=%s", table_id, name);
     return RC::INVALID_ARGUMENT;
@@ -123,6 +124,42 @@ RC Table::create(int32_t table_id,
 
   base_dir_ = base_dir;
   LOG_INFO("Successfully create table %s:%s", base_dir, name);
+  return rc;
+}
+
+RC Table::drop(const char *table_file_path) {
+  RC rc = RC::SUCCESS;
+  // create的逆过程, 从后往前
+
+  // drop indexes first
+  for (Index *index : indexes_) {
+    rc = index->drop();
+    if (rc != RC::SUCCESS) {
+        LOG_ERROR("Failed to drop index.");
+        return rc;
+    }
+  }
+
+  // destroy record handler
+  record_handler_->close();
+  delete record_handler_;
+  record_handler_ = nullptr;
+
+  // destroy buffer pool and remove data file
+  std::string data_file = table_data_file(table_file_path, name());
+  BufferPoolManager &bpm = BufferPoolManager::instance();
+  rc = bpm.remove_file(data_file.c_str());
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to remove data file");
+    return rc;
+  }
+
+  // destroy meta file
+  std::string meta_file = table_meta_file(table_file_path, name());
+  int remove_ret = ::remove(meta_file.c_str());
+  if (remove_ret != 0) {
+    LOG_ERROR("Failed to destroy meta file");
+  }
   return rc;
 }
 

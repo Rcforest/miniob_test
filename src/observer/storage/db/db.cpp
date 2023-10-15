@@ -96,9 +96,24 @@ RC Db::create_table(const char *table_name, int attribute_count, const AttrInfoS
     return rc;
   }
 
+  // miniOB在启动时会对所有table执行open
   opened_tables_[table_name] = table;
   LOG_INFO("Create table success. table name=%s, table_id:%d", table_name, table_id);
   return RC::SUCCESS;
+}
+
+RC Db::drop_table(const char *table_name) {
+  RC rc = RC::SUCCESS;
+  Table *table = find_table(table_name);
+  if (table == nullptr) {
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
+
+  // 删除文件
+  std::string table_file_path = path_;
+  rc = table->drop(table_file_path.c_str());
+  opened_tables_.erase(std::string(table_name));
+  return rc;
 }
 
 Table *Db::find_table(const char *table_name) const
