@@ -18,7 +18,7 @@ See the Mulan PSL v2 for more details. */
 
 /**
  * @brief 属性的类型
- * 
+ *
  */
 enum AttrType
 {
@@ -27,6 +27,7 @@ enum AttrType
   INTS,           ///< 整数类型(4字节)
   FLOATS,         ///< 浮点数类型(4字节)
   BOOLEANS,       ///< boolean类型，当前不是由parser解析出来的，是程序内部使用的
+  DATES,          ///< 日期类型(4字节)
 };
 
 const char *attr_type_to_string(AttrType type);
@@ -49,6 +50,7 @@ public:
   explicit Value(int val);
   explicit Value(float val);
   explicit Value(bool val);
+  explicit Value(int num, char* str);
   explicit Value(const char *s, int len = 0);
 
   Value(const Value &other) = default;
@@ -68,6 +70,7 @@ public:
   void set_boolean(bool val);
   void set_string(const char *s, int len = 0);
   void set_value(const Value &value);
+  void set_date(const char *s);
 
   std::string to_string() const;
 
@@ -102,6 +105,7 @@ private:
     int int_value_;
     float float_value_;
     bool bool_value_;
+    int32_t date_value_;
   } num_value_;
   std::string str_value_;
 };

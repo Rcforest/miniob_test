@@ -18,6 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/filter_stmt.h"
 #include "storage/db/db.h"
 #include "storage/table/table.h"
+#include "common/date.h"
 
 FilterStmt::~FilterStmt()
 {
@@ -120,6 +121,14 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     filter_unit->set_right(filter_obj);
   } else {
     FilterObj filter_obj;
+    if (condition.right_value.attr_type() == DATES) {
+      int32_t date_int = condition.right_value.get_int();
+      if (!is_valid_date(date_int)) {
+        LOG_ERROR("invalid date");
+        return RC::INVALID_ARGUMENT;
+      }
+    }
+
     filter_obj.init_value(condition.right_value);
     filter_unit->set_right(filter_obj);
   }
